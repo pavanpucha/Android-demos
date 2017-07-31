@@ -1,7 +1,9 @@
 package com.pucha.pavan.sharedpreferencesdemo;
 
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.SharedPreferences;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -22,6 +24,18 @@ public class MainActivity extends AppCompatActivity {
         String username = sharedPreferences.getString("username","");
         // we need to provide a default value
         Log.i("username",username);
+        new AlertDialog.Builder(this)
+                .setIcon(android.R.drawable.ic_dialog_alert)
+                .setTitle("you sure?")
+                .setMessage("Do you want to do this?")
+                .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        Log.i("Butapped", "yes");
+                    }
+                })
+                .setNegativeButton("NO",null)
+                .show();
     }
     @Override
     public boolean onCreateOptionsMenu(Menu menu){
