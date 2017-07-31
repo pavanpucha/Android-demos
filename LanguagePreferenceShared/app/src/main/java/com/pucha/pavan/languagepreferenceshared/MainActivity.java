@@ -16,7 +16,7 @@ public class MainActivity extends AppCompatActivity {
 
         final SharedPreferences newSharedPreferences = this.getSharedPreferences("com.pucha.pavan.languagepreferenceshared", Context.MODE_PRIVATE);
         String languageSelected = newSharedPreferences.getString("language","");
-        if(languageSelected ==""){
+        if(languageSelected =="") {
             new AlertDialog.Builder(this)
                     .setIcon(android.R.drawable.ic_dialog_alert)
                     .setTitle("What language ?")
@@ -25,13 +25,13 @@ public class MainActivity extends AppCompatActivity {
                         @Override
                         public void onClick(DialogInterface dialogInterface, int i) {
                             // Change language to english
-                            newSharedPreferences.edit().putString("language","english");
+                            newSharedPreferences.edit().putString("language", "english").apply();
                         }
                     })
                     .setNegativeButton("Spanish", new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialogInterface, int i) {
-                            newSharedPreferences.edit().putString("language","spanish");
+                            newSharedPreferences.edit().putString("language", "spanish").apply();
                         }
                     })
                     .show();
