@@ -20,7 +20,7 @@
             android:name=".EditYourNote"
             android:label="@string/title_activity_edit_your_note"
             android:parentActivityName=".MainActivity"
-            android:theme="@style/AppTheme.NoActionBar">
+            >
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.pucha.pavan.notes.MainActivity" />
