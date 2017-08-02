@@ -32,10 +32,11 @@ public class EditYourNote extends AppCompatActivity implements TextWatcher {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_edit_your_note);
+
         EditText editText = (EditText) findViewById(R.id.editText);
         //getting content from intent
         Intent i = getIntent();
-        int noteId = i.getIntExtra("noteId", -1);
+        noteId = i.getIntExtra("noteId", -1);
         if (noteId != -1) {
             editText.setText(MainActivity.notes.get(noteId));
 
