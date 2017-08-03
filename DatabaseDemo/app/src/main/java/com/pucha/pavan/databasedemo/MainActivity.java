@@ -2,6 +2,7 @@ package com.pucha.pavan.databasedemo;
 
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.support.annotation.IntegerRes;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -26,16 +27,11 @@ public class MainActivity extends AppCompatActivity {
             // Creats name with varchar datatype and age with int(of 3 characters);
             // Android studio doesn't tell if the sql command is typed correctly or wrongly
 
-            /*
-            Now Let's insert into the table
+            myDatabase.execSQL("CREATE TABLE IF NOT EXISTS newUsers (name VARCHAR, age INTEGER(3), id INTEGER PRIMARY KEY)");
+            myDatabase.execSQL("INSERT INTO newUsers(name,age) VALUES ('BB King',45)");
+            myDatabase.execSQL("INSERT INTO newUsers(name,age) VALUES ('Albert King',42)");
 
-             */
-            myDatabase.execSQL("INSERT INTO users(name,age) VALUES ('Ralph',34)");
-            myDatabase.execSQL("INSERT INTO users(name,age) VALUES ('Lauren',36)");
-
-            // Now Let's retrive the data
-            // Cursor allows us to loop data
-            Cursor cursor = myDatabase.rawQuery("SELECT * FROM users", null);
+            Cursor cursor = myDatabase.rawQuery("SELECT * FROM newUsers", null);
             /*
             Main Part, usually in other software  we dont need to deal with indexes
 
@@ -43,11 +39,21 @@ public class MainActivity extends AppCompatActivity {
 
             int nameIndex = cursor.getColumnIndex("name");
             int ageIndex = cursor.getColumnIndex("age");
+
+            int idIndex = cursor.getColumnIndex("id");
             cursor.moveToFirst();
             while (cursor != null) {
                 Log.i("Name", cursor.getString(nameIndex));
-                Log.i("Age",Integer.toString(cursor.getInt(ageIndex)));
+                Log.i("Age", Integer.toString(cursor.getInt(ageIndex)));
+                Log.i("ID", Integer.toString(cursor.getInt(idIndex)));
                 cursor.moveToNext();
+
+                /*
+                Now lets try to delete an element
+
+
+                 */
+
             }
 
         } catch (Exception e) {
