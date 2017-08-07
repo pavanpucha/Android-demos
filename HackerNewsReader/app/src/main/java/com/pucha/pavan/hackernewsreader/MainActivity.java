@@ -1,5 +1,8 @@
 package com.pucha.pavan.hackernewsreader;
 
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteStatement;
 import android.os.AsyncTask;
 import android.support.v4.app.INotificationSideChannel;
 import android.support.v7.app.AppCompatActivity;
@@ -18,55 +21,88 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
+import static android.icu.lang.UCharacter.GraphemeClusterBreak.L;
 import static android.support.v7.widget.AppCompatDrawableManager.get;
 
 public class MainActivity extends AppCompatActivity {
-    Map<Integer,String> articleURLs = new HashMap<Integer, String>();
+    Map<Integer, String> articleURLs = new HashMap<Integer, String>();
     // Integer is article ID and String will store the url
-    Map<Integer,String> articleTitles = new HashMap<Integer, String>();
-    ArrayList<Integer>  articleIds = new ArrayList<Integer>();
-
+    Map<Integer, String> articleTitles = new HashMap<Integer, String>();
+    ArrayList<Integer> articleIds = new ArrayList<Integer>();
+    SQLiteDatabase articleDB ;
+    // Create a table
     // Creating a DB
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        articleDB =this.openOrCreateDatabase("Articles", MODE_PRIVATE, null);
+        articleDB.execSQL("DROP TABLE article");
+        articleDB.execSQL("CREATE TABLE IF NOT EXISTS article (id INTEGER PRIMARY KEY, articleID INTEGER, url VARCHAR , title VARCHAR, content VARCHAR)");
+
+
+
         DownloadTask newTask = new DownloadTask();
-      try{
-          String result = newTask.execute("https://hacker-news.firebaseio.com/v0/topstories.json?print=pretty").get();
-          JSONArray jsonArray = new JSONArray(result);
+       // Cursor cursor ;
 
-          for(int i =0; i< 20;i++){
-              String articleId = jsonArray.getString(i);
-              DownloadTask getArticle= new DownloadTask();
+        try {
 
-              String articleInfo = getArticle.execute("https://hacker-news.firebaseio.com/v0/item/"+ jsonArray.getString(i)+".json?print=pretty").get();
-              JSONObject jsonObject = new JSONObject(articleInfo);
-              Log.i("jsonObject",jsonObject.toString());
-              String articleTitle = jsonObject.getString("title");
-              String articleUrl = jsonObject.getString("url");
-              articleIds.add(Integer.valueOf(articleId));
-              articleTitles.put(Integer.valueOf(articleId),articleTitle);
-              articleURLs.put(Integer.valueOf(articleId),articleUrl);
+            String result = newTask.execute("https://hacker-news.firebaseio.com/v0/topstories.json?print=pretty").get();
+            JSONArray jsonArray = new JSONArray(result);
 
-          }
-          Log.i("Article ID's", articleIds.toString());
-          Log.i("Article Titles ", articleTitles.toString());
-          Log.i("Article urL", articleURLs.toString());
-      }
-      catch (Exception e){
-          e.printStackTrace();
-      }
+            for (int i = 0; i < 20; i++) {
+                String articleId = jsonArray.getString(i);
+                DownloadTask getArticle = new DownloadTask();
+
+                String articleInfo = getArticle.execute("https://hacker-news.firebaseio.com/v0/item/" + jsonArray.getString(i) + ".json?print=pretty").get();
+                JSONObject jsonObject = new JSONObject(articleInfo);
+                Log.i("jsonObject", jsonObject.toString());
+                String articleTitle = jsonObject.getString("title");
+                String articleUrl;
+                if(jsonObject.has("url"))
+                    articleUrl= jsonObject.getString("url");
+                else
+                     articleUrl =" LINK NOT FOUND";
+                articleIds.add(Integer.valueOf(articleId));
+                articleTitles.put(Integer.valueOf(articleId), articleTitle);
+                articleURLs.put(Integer.valueOf(articleId), articleUrl);
+                String inputSQL = "INSERT INTO article (articleId ,url,title)  VALUES(?, ? ,?)";
+                SQLiteStatement sqLiteStatement = articleDB.compileStatement(inputSQL);
+                sqLiteStatement.bindString(1,articleId);
+                sqLiteStatement.bindString(2,articleUrl);
+                sqLiteStatement.bindString(3,articleTitle);
+
+                sqLiteStatement.execute();
+
+            }
+           Cursor cursor = articleDB.rawQuery("SELECT * FROM article",null);
+            cursor.moveToFirst();
+
+            int articleIdIndex = cursor.getColumnIndex("articleId");
+            int urlIndex = cursor.getColumnIndex ("url");
+            int titleIndex = cursor.getColumnIndex("title");
+           // cursor.moveToFirst();
+            while(cursor.moveToNext()){
+               Log.i(" ARTICLE ID ", Integer.toString(cursor.getInt(articleIdIndex)));
+                Log.i(" ARTICLE url ", cursor.getString(urlIndex));
+                Log.i("Article Title", cursor.getString(titleIndex));
+
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+// whistles
+
 
     }
 
-    public class DownloadTask extends AsyncTask<String, Void, String>{
+    public class DownloadTask extends AsyncTask<String, Void, String> {
 
         @Override
         protected String doInBackground(String... urls) {
             String result = "";
-            URL url ;
+            URL url;
             HttpURLConnection urlConnection = null;
             /*
             Initial values are null
@@ -77,13 +113,12 @@ public class MainActivity extends AppCompatActivity {
                 InputStream inputStream = urlConnection.getInputStream();
                 InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
                 int data = inputStreamReader.read();
-                while(data!=-1){
+                while (data != -1) {
                     char currentCharacter = (char) data;
-                    result+= currentCharacter;
+                    result += currentCharacter;
                     data = inputStreamReader.read();
                 }
-            }
-            catch (Exception e){
+            } catch (Exception e) {
                 e.printStackTrace();
             }
             return result;
