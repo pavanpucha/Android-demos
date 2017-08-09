@@ -50,7 +50,7 @@ public class MainActivity extends AppCompatActivity {
 
             String result = newTask.execute("https://hacker-news.firebaseio.com/v0/topstories.json?print=pretty").get();
             JSONArray jsonArray = new JSONArray(result);
-
+                articleDB.execSQL("DELETE FROM articles");
             for (int i = 0; i < 20; i++) {
                 String articleId = jsonArray.getString(i);
                 DownloadTask getArticle = new DownloadTask();
@@ -67,7 +67,7 @@ public class MainActivity extends AppCompatActivity {
                 articleIds.add(Integer.valueOf(articleId));
                 articleTitles.put(Integer.valueOf(articleId), articleTitle);
                 articleURLs.put(Integer.valueOf(articleId), articleUrl);
-                String inputSQL = "INSERT INTO article (articleId ,url,title)  VALUES(?, ? ,?)";
+                String inputSQL = "INSERT INTO article (articleID ,url,title)  VALUES(?, ? ,?)";
                 SQLiteStatement sqLiteStatement = articleDB.compileStatement(inputSQL);
                 sqLiteStatement.bindString(1,articleId);
                 sqLiteStatement.bindString(2,articleUrl);
@@ -79,10 +79,10 @@ public class MainActivity extends AppCompatActivity {
            Cursor cursor = articleDB.rawQuery("SELECT * FROM article",null);
             cursor.moveToFirst();
 
-            int articleIdIndex = cursor.getColumnIndex("articleId");
+            int articleIdIndex = cursor.getColumnIndex("articleID");
             int urlIndex = cursor.getColumnIndex ("url");
             int titleIndex = cursor.getColumnIndex("title");
-           // cursor.moveToFirst();
+           cursor.moveToFirst();
             while(cursor.moveToNext()){
                Log.i(" ARTICLE ID ", Integer.toString(cursor.getInt(articleIdIndex)));
                 Log.i(" ARTICLE url ", cursor.getString(urlIndex));
