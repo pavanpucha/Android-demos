@@ -8,6 +8,8 @@ import android.support.v4.app.INotificationSideChannel;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.widget.ArrayAdapter;
+import android.widget.ListView;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -29,28 +31,31 @@ public class MainActivity extends AppCompatActivity {
     // Integer is article ID and String will store the url
     Map<Integer, String> articleTitles = new HashMap<Integer, String>();
     ArrayList<Integer> articleIds = new ArrayList<Integer>();
-    SQLiteDatabase articleDB ;
-    // Create a table
-    // Creating a DB
+    SQLiteDatabase articleDB;
+    ArrayList<String> titles = new ArrayList<String>();
+    ArrayAdapter arrayAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        articleDB =this.openOrCreateDatabase("Articles", MODE_PRIVATE, null);
+
+        ListView listView = (ListView) findViewById(R.id.list_view);
+        arrayAdapter = new ArrayAdapter(this, android.R.layout.simple_list_item_1, titles);
+        listView.setAdapter(arrayAdapter);
+        articleDB = this.openOrCreateDatabase("Articles", MODE_PRIVATE, null);
         articleDB.execSQL("DROP TABLE article");
         articleDB.execSQL("CREATE TABLE IF NOT EXISTS article (id INTEGER PRIMARY KEY, articleID INTEGER, url VARCHAR , title VARCHAR, content VARCHAR)");
 
 
-
         DownloadTask newTask = new DownloadTask();
-       // Cursor cursor ;
+        // Cursor cursor ;
 
         try {
 
             String result = newTask.execute("https://hacker-news.firebaseio.com/v0/topstories.json?print=pretty").get();
             JSONArray jsonArray = new JSONArray(result);
-                articleDB.execSQL("DELETE FROM articles");
+            articleDB.execSQL("DELETE FROM articles");
             for (int i = 0; i < 20; i++) {
                 String articleId = jsonArray.getString(i);
                 DownloadTask getArticle = new DownloadTask();
@@ -60,35 +65,38 @@ public class MainActivity extends AppCompatActivity {
                 Log.i("jsonObject", jsonObject.toString());
                 String articleTitle = jsonObject.getString("title");
                 String articleUrl;
-                if(jsonObject.has("url"))
-                    articleUrl= jsonObject.getString("url");
+                if (jsonObject.has("url"))
+                    articleUrl = jsonObject.getString("url");
                 else
-                     articleUrl =" LINK NOT FOUND";
+                    articleUrl = " LINK NOT FOUND";
                 articleIds.add(Integer.valueOf(articleId));
                 articleTitles.put(Integer.valueOf(articleId), articleTitle);
                 articleURLs.put(Integer.valueOf(articleId), articleUrl);
                 String inputSQL = "INSERT INTO article (articleID ,url,title)  VALUES(?, ? ,?)";
                 SQLiteStatement sqLiteStatement = articleDB.compileStatement(inputSQL);
-                sqLiteStatement.bindString(1,articleId);
-                sqLiteStatement.bindString(2,articleUrl);
-                sqLiteStatement.bindString(3,articleTitle);
+                sqLiteStatement.bindString(1, articleId);
+                sqLiteStatement.bindString(2, articleUrl);
+                sqLiteStatement.bindString(3, articleTitle);
 
                 sqLiteStatement.execute();
 
             }
-           Cursor cursor = articleDB.rawQuery("SELECT * FROM article",null);
+            Cursor cursor = articleDB.rawQuery("SELECT * FROM article ORDER BY articleID DESC", null);
             cursor.moveToFirst();
-
+            titles.clear();
             int articleIdIndex = cursor.getColumnIndex("articleID");
-            int urlIndex = cursor.getColumnIndex ("url");
+            int urlIndex = cursor.getColumnIndex("url");
             int titleIndex = cursor.getColumnIndex("title");
-           cursor.moveToFirst();
-            while(cursor.moveToNext()){
-               Log.i(" ARTICLE ID ", Integer.toString(cursor.getInt(articleIdIndex)));
+            cursor.moveToFirst();
+            while (cursor.moveToNext()) {
+
+                titles.add(cursor.getString(titleIndex));
+                Log.i(" ARTICLE ID ", Integer.toString(cursor.getInt(articleIdIndex)));
                 Log.i(" ARTICLE url ", cursor.getString(urlIndex));
                 Log.i("Article Title", cursor.getString(titleIndex));
 
             }
+            arrayAdapter.notifyDataSetChanged();
         } catch (Exception e) {
             e.printStackTrace();
         }
