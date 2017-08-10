@@ -1,5 +1,6 @@
 package com.pucha.pavan.hackernewsreader;
 
+import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteStatement;
@@ -8,6 +9,8 @@ import android.support.v4.app.INotificationSideChannel;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
@@ -34,6 +37,10 @@ public class MainActivity extends AppCompatActivity {
     SQLiteDatabase articleDB;
     ArrayList<String> titles = new ArrayList<String>();
     ArrayAdapter arrayAdapter;
+    /*
+
+     */
+    ArrayList<String> urls = new ArrayList<String>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,6 +50,15 @@ public class MainActivity extends AppCompatActivity {
         ListView listView = (ListView) findViewById(R.id.list_view);
         arrayAdapter = new ArrayAdapter(this, android.R.layout.simple_list_item_1, titles);
         listView.setAdapter(arrayAdapter);
+        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> adapterView, View view, int pos, long l) {
+                Intent intent = new Intent(getApplicationContext(), ArticleActivity.class);
+                intent.putExtra("articleUrl", urls.get(pos));
+                startActivity(intent);
+                Log.i("article URL", urls.get(pos));
+            }
+        });
         articleDB = this.openOrCreateDatabase("Articles", MODE_PRIVATE, null);
         articleDB.execSQL("DROP TABLE article");
         articleDB.execSQL("CREATE TABLE IF NOT EXISTS article (id INTEGER PRIMARY KEY, articleID INTEGER, url VARCHAR , title VARCHAR, content VARCHAR)");
@@ -84,6 +100,7 @@ public class MainActivity extends AppCompatActivity {
             Cursor cursor = articleDB.rawQuery("SELECT * FROM article ORDER BY articleID DESC", null);
             cursor.moveToFirst();
             titles.clear();
+            urls.clear();
             int articleIdIndex = cursor.getColumnIndex("articleID");
             int urlIndex = cursor.getColumnIndex("url");
             int titleIndex = cursor.getColumnIndex("title");
@@ -91,10 +108,7 @@ public class MainActivity extends AppCompatActivity {
             while (cursor.moveToNext()) {
 
                 titles.add(cursor.getString(titleIndex));
-                Log.i(" ARTICLE ID ", Integer.toString(cursor.getInt(articleIdIndex)));
-                Log.i(" ARTICLE url ", cursor.getString(urlIndex));
-                Log.i("Article Title", cursor.getString(titleIndex));
-
+                urls.add(cursor.getString(urlIndex));
             }
             arrayAdapter.notifyDataSetChanged();
         } catch (Exception e) {
